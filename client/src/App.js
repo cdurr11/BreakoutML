@@ -1,26 +1,28 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import io from 'socket.io-client';
+import GameCanvas from './GameCanvas'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    var socket = io.connect('http://localhost:5000');
+    socket.on( 'connect', function() {
+      socket.emit( 'my event', {
+        data: 'User Connected'
+      })})
+
+    socket.on( 'my response', function( msg ) {
+       console.log( msg )
+        })
+  }
+  render() {
+    return (
+      <div className="App">
+        <GameCanvas/>
+      </div>
+    );
+  }
 }
 
 export default App;
