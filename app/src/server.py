@@ -5,6 +5,8 @@ app = Flask(__name__)
 
 socketio = SocketIO(app)
 
+FRAMES_PER_SECOND = 60
+
 @app.route('/')
 def sessions():
     return render_template('session.html')
@@ -12,10 +14,8 @@ def sessions():
 @socketio.on('my event')
 def handle_my_custom_event(json, methods=['GET', 'POST']):
     while (True):
-        # socketio.emit('my response', "hello")
-        time.sleep(1/60)
-    # print('received my event: ' + str(json))
-    # print("sending")
+        socketio.emit('my response', {'blocks': [[True],[True],[True]]})
+        time.sleep(1/FRAMES_PER_SECOND)
 
 
 
