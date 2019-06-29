@@ -12,6 +12,9 @@ class Body():
     def update_position(velocity_vector):
         pass
 
+    def get_position(self):
+        return self.position
+
 class Block(Body):
     def __init__( self, position, type, side_length, exists = True):
         self.type = type
@@ -22,6 +25,13 @@ class Block(Body):
     def update_position(velocity_vector):
         raise Exception("Tried to update position of Block")
 
+    def get_type(self):
+        return self.type
+
+    def get_exists(self):
+        return self.exists
+
+
 class Paddle(Body):
     def __init__( self, position):
         super().__init__(position)
@@ -30,8 +40,9 @@ class Paddle(Body):
         pass
 
 class Ball(Body):
-    def __init__(self, position, radius):
-        super().__init__(position)
+    def __init__(self, center, radius):
+        self.center = center
+        self.radius = radius
 
     def update_position(velocity_vector):
         pass
