@@ -3,8 +3,8 @@ class Vector():
         self.x = x
         self.y = y
 
-    def getX():
+    def get_x(self):
         return self.x
 
-    def getY():
+    def get_y(self):
         return self.y

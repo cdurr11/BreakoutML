@@ -1,3 +1,4 @@
+from vector import Vector
 class BLOCK_TYPES:
     BORDER = 0
     NORMAL = 1
@@ -33,11 +34,19 @@ class Block(Body):
 
 
 class Paddle(Body):
-    def __init__( self, position):
+    def __init__( self, position, width):
         super().__init__(position)
+        self.position = position
+        self.width = width
 
-    def update_position(velocity_vector):
-        pass
+    def update_position(self, velocity_vector):
+        assert velocity_vector.get_y() == 0
+        print(self.position)
+        self.position = (self.position[0] + velocity_vector.get_x(),
+                        self.position[1] + velocity_vector.get_y())
+
+    def get_width(self):
+        return self.width
 
 class Ball(Body):
     def __init__(self, center, radius):

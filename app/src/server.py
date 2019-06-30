@@ -23,6 +23,7 @@ def handle_my_custom_event(json, methods=['GET', 'POST']):
     pixel_height = game.get_pixel_height()
     block_size = game.get_block_size()
     #rows are do not include wall blocks
+    # paddle_width = game.get_paddle().get_width()
     rows = game.get_rows()
     columns = game.get_columns()
 
@@ -37,18 +38,21 @@ def handle_my_custom_event(json, methods=['GET', 'POST']):
         # 'blocks' : json_blocks,
     })
 
-    # while (True):
-        # socketio.emit('my response', {'blocks': [[True],[True],[True]]})
-        # time.sleep(1/FRAMES_PER_SECOND)
-
 @socketio.on('start_play')
 def handle_play(json, method=['GET', 'POST']):
 
-    while (True):
-        # json_blocks = [block.get_position() for block in game.get_blocks()]
-        socketio.emit('step', {'blocks': game.get_blocks_json()});
-        time.sleep(1)
-        # time.sleep(1/FRAMES_PER_SECOND)
+    print("json: ", json)
+    # time.sleep(1)
+    time.sleep(1/FRAMES_PER_SECOND)
+    #do game logic here, emit updated things, repeat
+    game.time_step(json)
+    socketio.emit('step',
+    {
+        'paddle' : game.get_paddle_location_json(),
+        'blocks': game.get_blocks_json()
+    });
+
+
 
 @socketio.on('my event')
 def handle_my_custom_event(json, methods=['GET', 'POST']):

@@ -1,6 +1,7 @@
 import os, sys
 # sys.path.append(os.path.abspath('.'))
-from bodies import Block
+from bodies import Block, Paddle
+from vector import Vector
 # from .bodies import Block
 
 class Game():
@@ -13,6 +14,7 @@ class Game():
         #in pixels
         self.pixel_width = ( columns + 2 ) * block_size
         self.blocks = self.initialize_blocks()
+        self.paddle = Paddle((self.pixel_width//2 - block_size//2, self.pixel_height - block_size), block_size)
         # self.ball = Ball()
 
     #retuns a 1D array of all blocks in the game (hard/soft) and the order that
@@ -36,8 +38,35 @@ class Game():
     def get_blocks(self):
         return self.blocks
 
-    def time_step(keys):
-        pass
+    #TODO figure out the scale for paddle speed
+    def update_paddle(self, keys):
+        if (keys['left'] and keys['right']):
+            pass
+
+        # horizontal_paddle_speed = 5;
+        elif (keys['left']):
+            self.paddle.update_position(Vector(-10,0))
+            paddle_pos_x = self.paddle.get_position()[0]
+            #inside the left wall
+            if paddle_pos_x < self.block_size:
+                translation_vector = Vector(self.block_size - paddle_pos_x, 0)
+                self.paddle.update_position(translation_vector)
+
+        elif (keys['right']):
+            self.paddle.update_position(Vector(10,0))
+            paddle_pos_x = self.paddle.get_position()[0]
+            #inside right wall
+            if paddle_pos_x + self.paddle.get_width() > self.get_pixel_width() - self.block_size:
+                right_overlap = (paddle_pos_x + self.paddle.get_width()) - (self.get_pixel_width() - self.block_size)
+                translation_vector = Vector(-right_overlap, 0)
+                self.paddle.update_position(translation_vector)
+
+    #keys {'left' : Boolean, 'right' : Boolean}
+    def time_step(self, keys):
+        self.update_paddle(keys)
+        #first update paddle
+        #cancel each other out
+
 
     #returns true if the ball and the other_body intersect else false
     def check_ball_intersections(ball, other_body):
@@ -68,6 +97,15 @@ class Game():
 
     def get_columns(self):
         return self.columns
+
+    def get_paddle(self):
+        return self.paddle
+
+    def get_paddle_location_json(self):
+        return {'x' : self.paddle.get_position()[0],
+                'y' : self.paddle.get_position()[1],
+                'width' : self.paddle.get_width()}
+
 
     def get_blocks_json(self):
         final_blocks_json = []
