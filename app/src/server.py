@@ -16,7 +16,7 @@ def sessions():
 @socketio.on('init')
 def handle_my_custom_event(json, methods=['GET', 'POST']):
     global game
-    game = Game(2,10,30)
+    game = Game(2,10,60)
     game.initialize_blocks()
     game_blocks = game.get_blocks()
     pixel_width = game.get_pixel_width()
@@ -41,7 +41,7 @@ def handle_my_custom_event(json, methods=['GET', 'POST']):
 @socketio.on('start_play')
 def handle_play(json, method=['GET', 'POST']):
 
-    print("json: ", json)
+    # print("json: ", json)
     # time.sleep(1)
     time.sleep(1/FRAMES_PER_SECOND)
     #do game logic here, emit updated things, repeat
@@ -49,7 +49,9 @@ def handle_play(json, method=['GET', 'POST']):
     socketio.emit('step',
     {
         'paddle' : game.get_paddle_location_json(),
-        'blocks': game.get_blocks_json()
+        'blocks': game.get_blocks_json(),
+        'ball' : game.get_ball_location_json(),
+        'game_state':game.get_game_state(), 
     });
 
 

@@ -1,6 +1,6 @@
 import os, sys
 # sys.path.append(os.path.abspath('.'))
-from bodies import Block, Paddle
+from bodies import Block, Paddle, Ball
 from vector import Vector
 # from .bodies import Block
 
@@ -11,11 +11,13 @@ class Game():
         self.block_size = block_size
         self.height = height
         self.pixel_height = height * block_size
+        #game_state = 'PLAYING', 'GAME_OVER', 'PAUSED'
+        self.game_state = 'PLAYING'
         #in pixels
         self.pixel_width = ( columns + 2 ) * block_size
         self.blocks = self.initialize_blocks()
-        self.paddle = Paddle((self.pixel_width//2 - block_size//2, self.pixel_height - block_size), block_size)
-        # self.ball = Ball()
+        self.paddle = Paddle((self.pixel_width//2 - block_size//2, self.pixel_height - block_size), block_size, 10)
+        self.ball = Ball((600,600), 6)
 
     #retuns a 1D array of all blocks in the game (hard/soft) and the order that
     #they will be added to the game
@@ -45,7 +47,7 @@ class Game():
 
         # horizontal_paddle_speed = 5;
         elif (keys['left']):
-            self.paddle.update_position(Vector(-10,0))
+            self.paddle.update_position(Vector(-(self.block_size//5),0))
             paddle_pos_x = self.paddle.get_position()[0]
             #inside the left wall
             if paddle_pos_x < self.block_size:
@@ -53,7 +55,7 @@ class Game():
                 self.paddle.update_position(translation_vector)
 
         elif (keys['right']):
-            self.paddle.update_position(Vector(10,0))
+            self.paddle.update_position(Vector(self.block_size//5,0))
             paddle_pos_x = self.paddle.get_position()[0]
             #inside right wall
             if paddle_pos_x + self.paddle.get_width() > self.get_pixel_width() - self.block_size:
@@ -63,7 +65,19 @@ class Game():
 
     #keys {'left' : Boolean, 'right' : Boolean}
     def time_step(self, keys):
-        self.update_paddle(keys)
+        if self.game_state == 'PLAYING':
+            self.update_paddle(keys)
+            self.ball.update_position_auto()
+            for block in self.blocks:
+                if self.ball.intersects_block(block):
+                    self.ball.resolve_collision_block(block)
+
+            if self.ball.intersects_paddle(self.paddle):
+                self.ball.resolve_collision_paddle(self.paddle)
+
+            if (not self.check_ball_in_bounds(self.ball)):
+                self.game_state = 'GAME_OVER'
+
         #first update paddle
         #cancel each other out
 
@@ -80,8 +94,11 @@ class Game():
         pass
 
     #returns true if the ball is in bounds, false otherwise
-    def check_ball_in_bounds(ball):
-        pass
+    def check_ball_in_bounds(self, ball):
+        if ball.get_center()[1] > self.pixel_height:
+            return False
+        return True
+
 
     def get_pixel_width(self):
         return self.pixel_width
@@ -101,10 +118,18 @@ class Game():
     def get_paddle(self):
         return self.paddle
 
+    def get_game_state(self):
+        return self.game_state
+
     def get_paddle_location_json(self):
         return {'x' : self.paddle.get_position()[0],
                 'y' : self.paddle.get_position()[1],
                 'width' : self.paddle.get_width()}
+
+    def get_ball_location_json(self):
+        return {'x' : self.ball.get_center()[0],
+                'y' : self.ball.get_center()[1],
+                }
 
 
     def get_blocks_json(self):
