@@ -28,19 +28,9 @@ def init():
     model._make_predict_function()
     session = K.get_session()
     graph = tf.get_default_graph()
-    graph.finalize()
+    # graph.finalize()
 
 
-# NEURAL_NET_PLAY = True
-# if NEURAL_NET_PLAY:
-#     model = Sequential()
-#     model.add(Dense(32, activation='relu', input_shape=(6,)))
-#     model.add(Dense(32, activation='relu'))
-#     model.add(Dense(2, activation='linear'))
-#     model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-#     model.load_weights("training_1/cp.ckpt")
-#     model._make_predict_function()
-#     graph = tf.get_default_graph()
 
 @app.route('/')
 def sessions():
@@ -69,37 +59,41 @@ def handle_my_custom_event(json, methods=['GET', 'POST']):
         'pixel_height' : pixel_height,
         'block_size': block_size,
         # 'blocks' : json_blocks,
-    })
+    });
+    handle_play()
 
-@socketio.on('start_play')
-def handle_play(json, method=['GET', 'POST']):
+# @socketio.on('start_play')
+def handle_play(method=['GET', 'POST']):
     # global graph
     # print("json: ", json)
     # time.sleep(1)
-    time.sleep(1/FRAMES_PER_SECOND)
-    #do game logic here, emit updated things, repeat
-    if NEURAL_NET_PLAY:
-        with graph.as_default():
-            with session.as_default():
-                state = np.array([game.get_game_state_vector()])
-                print(model.summary())
-                prediction = model.predict(state)
-                if prediction == 0:
-                    game.time_step({'left' : True, 'right' : False})
-                else:
-                    game.time_step({'left' : False, 'right' : True})
+    while True:
+        time.sleep(1/FRAMES_PER_SECOND)
+        #do game logic here, emit updated things, repeat
+        if NEURAL_NET_PLAY:
+            with graph.as_default():
+                with session.as_default():
+                    state = np.array([game.get_game_state_vector()])
+                    print(model.summary())
+                    # prediction = model.predict(state)
+                    prediction = np.argmax(model.predict(state))
+                    # print(prediction)
+                    if prediction == 0:
+                        game.time_step({'left' : True, 'right' : False})
+                    else:
+                        game.time_step({'left' : False, 'right' : True})
 
-    else:
-        game.time_step(json)
+        else:
+            game.time_step(json)
 
-    socketio.emit('step',
-    {
-        'paddle' : game.get_paddle_location_json(),
-        'blocks': game.get_blocks_json(),
-        'ball' : game.get_ball_location_json(),
-        'game_state':game.get_game_state(),
-        'score' : game.get_score(),
-    });
+        socketio.emit('step',
+        {
+            'paddle' : game.get_paddle_location_json(),
+            'blocks': game.get_blocks_json(),
+            'ball' : game.get_ball_location_json(),
+            'game_state':game.get_game_state(),
+            'score' : game.get_score(),
+        });
 
 
 

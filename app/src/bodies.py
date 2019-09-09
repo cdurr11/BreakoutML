@@ -1,4 +1,6 @@
 from vector import Vector
+import random
+
 class BLOCK_TYPES:
     BORDER = 0
     NORMAL = 1
@@ -17,10 +19,13 @@ class Body():
         return self.position
 
 class Block(Body):
+    #purple, yellow, blue, red
+    colors = ['#EE82EE', '#FFFF99', '#226FFF', '#ff6666', '#4FEE73']
     def __init__( self, position, type, side_length, exists = True):
         self.type = type
         self.exists = exists
         self.side_length = side_length
+        self.color = random.choice(Block.colors)
         super().__init__(position)
 
     def update_position(velocity_vector):
@@ -37,6 +42,15 @@ class Block(Body):
 
     def get_side_length(self):
         return self.side_length
+
+    def remove_block(self):
+        self.exists = False
+
+    def is_soft(self):
+        return self.type == 'SOFT'
+
+    def get_color(self):
+        return self.color
 
 
 class Paddle(Body):
@@ -125,8 +139,6 @@ class Ball(Body):
             distance_from_left = right_ball_bound[0] - block_left
             self.update_position_manual(Vector(-distance_from_left - 1, 0))
             self.velocity = self.velocity.reflect_x()
-            print("1")
-            # assert False
 
         #hitting the right side of the block
         if (left_ball_bound[0] <= block_right \
@@ -136,7 +148,6 @@ class Ball(Body):
             distance_from_right = block_right - left_ball_bound[0]
             self.update_position_manual(Vector(distance_from_right + 1, 0))
             self.velocity = self.velocity.reflect_x()
-            print("2")
 
         #hitting the  bottom of the block
         if (top_ball_bound[1] <= block_bottom \

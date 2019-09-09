@@ -2,8 +2,11 @@ import os, sys
 # sys.path.append(os.path.abspath('.'))
 from bodies import Block, Paddle, Ball
 from vector import Vector
+import random
+import math
 # from .bodies import Block
 
+BALL_VELOCITY_MAGINITUDE = 8
 class Game():
     def __init__(self, rows, columns, block_size, height = 10):
         self.rows = rows
@@ -11,13 +14,17 @@ class Game():
         self.block_size = block_size
         self.height = height
         self.pixel_height = height * block_size
-        #game_state = 'PLAYING', 'GAME_OVER', 'PAUSED'
+        #game_state = 'PLAYING', 'LOST', 'PAUSED', 'WON'
         self.game_state = 'PLAYING'
         #in pixels
         self.pixel_width = ( columns + 2 ) * block_size
         self.blocks = self.initialize_blocks()
         self.paddle = Paddle((self.pixel_width//2 - block_size//2, self.pixel_height - block_size), block_size, 10)
-        self.ball = Ball((600,600), 6)
+        self.ball = Ball((self.pixel_width//2 - block_size//2, self.pixel_height//2), 6, self.make_initial_velocity())
+        self.score = 0
+        self.intersected_paddle = False
+        self.intersected_block = False
+        self.initialize_blocks()
 
     #retuns a 1D array of all blocks in the game (hard/soft) and the order that
     #they will be added to the game
@@ -65,33 +72,36 @@ class Game():
 
     #keys {'left' : Boolean, 'right' : Boolean}
     def time_step(self, keys):
+        self.intersected_paddle = False
+        self.intersected_block = False
+
+        if (self.score == self.rows * self.columns):
+            self.game_state = 'WON'
+
         if self.game_state == 'PLAYING':
             self.update_paddle(keys)
             self.ball.update_position_auto()
             for block in self.blocks:
-                if self.ball.intersects_block(block):
-                    self.ball.resolve_collision_block(block)
+                if block.get_exists():
+                    if self.ball.intersects_block(block):
+                        self.ball.resolve_collision_block(block)
+                        if block.is_soft():
+                            self.score += 1
+                            block.remove_block()
+                        self.intersected_block = True
 
             if self.ball.intersects_paddle(self.paddle):
+                self.intersected_paddle = True
                 self.ball.resolve_collision_paddle(self.paddle)
 
             if (not self.check_ball_in_bounds(self.ball)):
-                self.game_state = 'GAME_OVER'
+                self.game_state = 'LOST'
+
+
 
         #first update paddle
         #cancel each other out
 
-
-    #returns true if the ball and the other_body intersect else false
-    def check_ball_intersections(ball, other_body):
-        pass
-
-    def check_paddle_intersections(paddle, wall_block):
-        pass
-
-    #returns a new vector that results from the resolved collision
-    def resolve_collision(ball, other_body):
-        pass
 
     #returns true if the ball is in bounds, false otherwise
     def check_ball_in_bounds(self, ball):
@@ -131,16 +141,49 @@ class Game():
                 'y' : self.ball.get_center()[1],
                 }
 
+    def get_score(self):
+        return self.score
+
+    def did_intersect_paddle(self):
+        return self.intersected_paddle
+
+    def did_intersect_block(self):
+        return self.intersected_block
+
+    def make_initial_velocity(self):
+        #Get a random angle value between 10 and 30
+        angle = random.randint(30,60)
+        rad_angle = math.radians(angle)
+        horizontal_velocity = math.sin(rad_angle) * BALL_VELOCITY_MAGINITUDE
+        vertical_velocity = math.cos(rad_angle) * BALL_VELOCITY_MAGINITUDE
+        random_negate = 1 if random.random() < 0.5 else -1
+        return Vector(random_negate*horizontal_velocity, vertical_velocity)
+
+
 
     def get_blocks_json(self):
         final_blocks_json = []
         for block in self.blocks:
-            final_blocks_json.append(
-                {
-                    'x': block.get_position()[0],
-                    'y': block.get_position()[1],
-                    'type' : block.get_type(),
-                    'exists' : block.get_exists(),
-                })
+            if block.get_exists():
+                final_blocks_json.append(
+                    {
+                        'x': block.get_position()[0],
+                        'y': block.get_position()[1],
+                        'type' : block.get_type(),
+                        'exists' : block.get_exists(),
+                        'color' : block.get_color(),
+                    })
 
         return final_blocks_json;
+
+    def get_game_state_vector(self):
+        ball_center_x = self.ball.get_center()[0]
+        ball_center_y = self.ball.get_center()[1]
+        ball_vel_x = self.ball.get_velocity().get_x()
+        ball_vel_y = self.ball.get_velocity().get_y()
+        paddle_pos_x = self.paddle.get_position()[0]
+        paddle_pos_y = self.paddle.get_position()[1]
+
+        return (ball_center_x, ball_center_y, \
+                ball_vel_x, ball_vel_y, \
+                paddle_pos_x, paddle_pos_y)
